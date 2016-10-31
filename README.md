@@ -25,4 +25,5 @@ Better webfont loading with using localStorage and providing WOFF/2 support
 
 # Thanks to
 RU: https://htmlacademy.ru/blog/61-better-webfont-loading-with-localstorage-and-woff2
+
 EN: http://bdadam.com/blog/better-webfont-loading-with-localstorage-and-woff2.html
