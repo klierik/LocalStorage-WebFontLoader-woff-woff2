@@ -6,14 +6,14 @@ Better webfont loading with using localStorage and providing WOFF/2 support
 ```
 <script>
   loadFont('Font Name', 'font-name-woff.css', 'font-name-woff2.css');
-</sc
-## By default
+</script>
 ```
-
 ```font-name-woff.css``` — css file with base64 font in woff format
 
 ```font-name-woff2.css``` — css file with base64 font in woff2 format
 
+## By default
+```
 <script>
   loadFont('Museo Sans Bold', 'vendor/fonts/museoSans/700woff.css', 'vendor/fonts/museoSans/700woff2.css');
 </script>
