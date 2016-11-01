@@ -33,7 +33,6 @@ function loadFont(fontName, woffUrl, woff2Url, appendFont, prefix) {
 	// 1. Настраиваем localStorage
 	var loSto = {};
 
-
 	try {
 		// Устанавливаем вспомогательную переменную для помощи с localStorage,
 		// например, для случаев когда cookies отключены и браузер не даёт к ним доступа.
