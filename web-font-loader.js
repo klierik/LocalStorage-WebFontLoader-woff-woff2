@@ -12,7 +12,6 @@ function loadFonts(fontsArray, options) {
 		}, options),
 		loSto   = {};
 
-
 	function init() {
 		if (!checkBrowserSupport()) {
 			return false
@@ -83,7 +82,6 @@ function loadFonts(fontsArray, options) {
 	}
 
 	function appendFont(styleCss) {
-		console.log(styleCss);
 		// 2. Создаём элемент <style>, который мы используем для вставки шрифта, закодированного в base64.
 		var styleElement = document.createElement('style');
 		styleElement.rel = 'stylesheet';
