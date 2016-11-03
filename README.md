@@ -35,7 +35,7 @@ Better webfont loading with using localStorage and providing WOFF/2 support
 </script>
 ```
 
-## Apply font to page after load
+## Apply font after page load
 ```
 <script>
   loadFont('Museo Sans Bold', 'vendor/fonts/museoSans/700woff.css', 'vendor/fonts/museoSans/700woff2.css', true);
