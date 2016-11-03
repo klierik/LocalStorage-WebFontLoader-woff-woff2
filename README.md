@@ -5,48 +5,27 @@ Better webfont loading with using localStorage and providing WOFF/2 support
 ## Example
 ```
 <script>
-  loadFont('Font Name', 'font-name-woff.css', 'font-name-woff2.css');
+  loadFonts([['Dispatch Bold', '<?php echo $this->getUrl() . "vendor/fonts/dispatch/bold.woff.css" ?>', '<?php echo $this->getUrl() . "vendor/fonts/dispatch/bold.woff2.css" ?>']])
 </script>
 ```
-```font-name-woff.css``` — css file with base64 font in woff format
+```bold.woff.css``` — css file with base64 font in woff format
 ```
 @font-face {
-    font-family: 'Font Name';
+    font-family: 'Dispatch Bold';
     src: url(data:application/font-woff;charset=utf-8;base64,d09GRgABAAAAA.....) format('woff');
     font-weight: normal;
     font-style: normal;
 }
 ```
 
-```font-name-woff2.css``` — css file with base64 font in woff2 format
+```bold.woff2.css``` — css file with base64 font in woff2 format
 ```
 @font-face {
-    font-family: 'Font Name';
+    font-family: 'Dispatch Bold';
     src: url(data:application/font-woff2;charset=utf-8;base64,d09GMgABAAAAA.....) format('woff2');
     font-weight: normal;
     font-style: normal;
 }
-```
-
-## By default
-```
-<script>
-  loadFont('Museo Sans Bold', 'vendor/fonts/museoSans/700woff.css', 'vendor/fonts/museoSans/700woff2.css');
-</script>
-```
-
-## Apply font after page load
-```
-<script>
-  loadFont('Museo Sans Bold', 'vendor/fonts/museoSans/700woff.css', 'vendor/fonts/museoSans/700woff2.css', true);
-</script>
-```
-
-## Set custom localStorage prefix
-```
-<script>
-  loadFont('Museo Sans Bold', 'vendor/fonts/museoSans/700woff.css', 'vendor/fonts/museoSans/700woff2.css', false, 'my-prefix');
-</script>
 ```
 
 # Thanks to
