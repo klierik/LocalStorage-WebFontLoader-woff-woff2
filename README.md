@@ -9,8 +9,24 @@ Better webfont loading with using localStorage and providing WOFF/2 support
 </script>
 ```
 ```font-name-woff.css``` — css file with base64 font in woff format
+```
+@font-face {
+    font-family: 'Font Name';
+    src: url(data:application/font-woff;charset=utf-8;base64,d09GRgABAAAAA.....) format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+```
 
 ```font-name-woff2.css``` — css file with base64 font in woff2 format
+```
+@font-face {
+    font-family: 'Font Name';
+    src: url(data:application/font-woff2;charset=utf-8;base64,d09GMgABAAAAA.....) format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
+```
 
 ## By default
 ```
