@@ -2,16 +2,16 @@ function loadFonts(fontsArray, options) {
 
 	var fonts   = fontsArray,
 		options = mergeObject({
-		// If false: font will append into page only if it was previously stored into LocalStorage
-		// So font will append when customer refresh the page (prevent text blinking when with custom font usage)
-		// If true: append font immediately after font loading finish
-		appendFontWhenLoaded: false
-		, loadWhenDomLoaded:  true				// Start load font only after DOMContentLoaded event fired. If false: load after init()
-		, async:              true 				// Load fonts via async
-		, prefix:             'font-storage-' 	// Storage prefix
-		, postfixUrl:         '-url'			// Storage Css postfix
-		, postfixCss:         '-css'			// Storage Url postfix
-		, debug:              false				// Enable debug mode
+			// If false: font will append into page only if it was previously stored into LocalStorage
+			// So font will append when customer refresh the page (prevent text blinking when with custom font usage)
+			// If true: append font immediately after font loading finish
+			appendFontWhenLoaded: false
+			, loadWhenDomLoaded:  true				// Start load font only after DOMContentLoaded event fired. If false: load after init()
+			, async:              true 				// Load fonts via async
+			, prefix:             'font-storage-' 	// Storage prefix
+			, postfixUrl:         '-url'			// Storage Css postfix
+			, postfixCss:         '-css'			// Storage Url postfix
+			, debug:              false				// Enable debug mode
 		}, options),
 		loSto   = {};
 
@@ -21,12 +21,7 @@ function loadFonts(fontsArray, options) {
 		}
 
 		prepare();
-
-		if (options.loadWhenDomLoaded) {
-			document.addEventListener("DOMContentLoaded", storeAllFonts);
-		} else {
-			storeAllFonts();
-		}
+		storeAllFonts();
 	}
 
 
@@ -104,8 +99,15 @@ function loadFonts(fontsArray, options) {
 
 	function storeFont(font) {
 		if (!isFontStored(font)) {
+
 			// If font not stored already — load it
-			loadFont(font)
+			if (options.loadWhenDomLoaded) {
+				document.addEventListener("DOMContentLoaded", function () {
+					loadFont(font)
+				});
+			} else {
+				loadFont(font)
+			}
 		}
 	}
 
