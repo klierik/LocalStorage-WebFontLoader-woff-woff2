@@ -16,7 +16,7 @@ function loadFonts(fontsArray, options) {
 		loSto   = {};
 
 	function init() {
-		if (!checkBrowserSupport()) {
+		if (!storageAvailable()) {
 			return false
 		}
 
@@ -25,37 +25,30 @@ function loadFonts(fontsArray, options) {
 	}
 
 
-	function checkBrowserSupport() {
-		// 0.1 Check for Browser support
-		var nua           = navigator.userAgent
-			, noSupport   = !window.addEventListener // IE8 и ниже
-			|| (nua.match(/(Android (2|3|4.0|4.1|4.2|4.3))|(Opera (Mini|Mobi))/) && !nua.match(/Chrome/)) // Android Stock Browser до 4.4 и Opera Mini
-			, noLsSupport = false;
-
-		// 0.2 Safari, in Private Browsing Mode, looks like it supports localStorage but all calls to setItem
-		// throw QuotaExceededError. We're going to detect this and just silently drop any calls to setItem
-		// to avoid the entire page breaking, without having to do a check at each usage of Storage.
-		// https://gist.github.com/philfreo/68ea3cd980d72383c951
-		if (typeof localStorage === 'object') {
-			try {
-				localStorage.setItem('localStorage', 1);
-				localStorage.removeItem('localStorage');
-			} catch (error) {
-				Storage.prototype._setItem = Storage.prototype.setItem;
-				Storage.prototype.setItem  = function () {
-				};
-				echo(error);
-				echo('Your web browser does not support storing settings locally.');
-
-				noLsSupport = true;
-			}
+	function storageAvailable() {
+		// 0.1 Check for Browser support and localStorage accessibility
+		/**
+		 * Browsers that support localStorage will have a property on the window object named localStorage.
+		 * However, for various reasons, just asserting that property exists may throw exceptions.
+		 * If it does exist, that is still no guarantee that localStorage is actually available,
+		 * as various browsers offer settings that disable localStorage. So a browser may support localStorage,
+		 * but not make it available to the scripts on the page.
+		 *
+		 * One example of that is Safari, which in Private Browsing mode gives us an empty localStorage object
+		 * with a quota of zero, effectively making it unusable (Error: QuotaExceededError: DOM Exception 22),
+		 * Our feature detect should take these scenarios into account.
+		 * */
+		try {
+			var storage = window['localStorage'],
+				x       = '__storage_test__';
+			storage.setItem(x, x);
+			storage.removeItem(x);
+			return true;
 		}
-
-		if (noSupport || noLsSupport) {
+		catch (e) {
+			echo(e);
 			return false;
 		}
-
-		return true;
 	}
 
 	function prepare() {
