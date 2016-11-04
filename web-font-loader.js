@@ -118,6 +118,8 @@ function loadFonts(fontsArray, options) {
 
 			// 4. Append font
 			appendFont(loSto[font.storedCss]);
+			return true;
+
 		} else {
 			return false;
 		}
