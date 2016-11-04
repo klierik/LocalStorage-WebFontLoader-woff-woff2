@@ -2,13 +2,16 @@ function loadFonts(fontsArray, options) {
 
 	var fonts   = fontsArray,
 		options = mergeObject({
-			appendFontWhenLoad:  false 				// Immediately append font after load
-			, loadWhenDomLoaded: true				// Start load font only after DOMContentLoaded event fired. If false: load after init()
-			, async:             true 				// Load fonts via async
-			, prefix:            'font-storage-' 	// Storage prefix
-			, postfixUrl:        '-url'				// Storage Css postfix
-			, postfixCss:        '-css'				// Storage Url postfix
-			, debug:             false				// Enable debug mode
+		// If false: font will append into page only if it was previously stored into LocalStorage
+		// So font will append when customer refresh the page (prevent text blinking when with custom font usage)
+		// If true: append font immediately after font loading finish
+		appendFontWhenLoaded: false
+		, loadWhenDomLoaded:  true				// Start load font only after DOMContentLoaded event fired. If false: load after init()
+		, async:              true 				// Load fonts via async
+		, prefix:             'font-storage-' 	// Storage prefix
+		, postfixUrl:         '-url'			// Storage Css postfix
+		, postfixCss:         '-css'			// Storage Url postfix
+		, debug:              false				// Enable debug mode
 		}, options),
 		loSto   = {};
 
@@ -19,7 +22,7 @@ function loadFonts(fontsArray, options) {
 
 		prepare();
 
-		if(options.loadWhenDomLoaded) {
+		if (options.loadWhenDomLoaded) {
 			document.addEventListener("DOMContentLoaded", storeAllFonts);
 		} else {
 			storeAllFonts();
@@ -28,7 +31,7 @@ function loadFonts(fontsArray, options) {
 
 
 	function checkBrowserSupport() {
-		// 0.1 Многие неподдерживаемые браузеры должны останавливать работу тут.
+		// 0.1 Check for Browser support
 		var nua           = navigator.userAgent
 			, noSupport   = !window.addEventListener // IE8 и ниже
 			|| (nua.match(/(Android (2|3|4.0|4.1|4.2|4.3))|(Opera (Mini|Mobi))/) && !nua.match(/Chrome/)) // Android Stock Browser до 4.4 и Opera Mini
@@ -47,7 +50,7 @@ function loadFonts(fontsArray, options) {
 				Storage.prototype.setItem  = function () {
 				};
 				echo(error);
-				echo('Your web browser does not support storing settings locally. In Safari, the most common cause of this is using "Private Browsing Mode". Some settings may not save or some features may not work properly for you.');
+				echo('Your web browser does not support storing settings locally.');
 
 				noLsSupport = true;
 			}
@@ -61,11 +64,11 @@ function loadFonts(fontsArray, options) {
 	}
 
 	function prepare() {
-		// 1. Настраиваем localStorage
+		// 1. Prepare localStorage
 		try {
-			// Устанавливаем вспомогательную переменную для помощи с localStorage,
-			// например, для случаев когда cookies отключены и браузер не даёт к ним доступа.
-			// Иначе могут быть получены исключения, которые полностью остановят загрузку шрифтов.
+			// Set helper variable for localStorage
+			// this can be helpful when cookies disable or browser denied access to it.
+			// Instead we can get some exceptions which stop fonts loading
 			loSto = localStorage || {};
 		} catch (error) {
 			echo(error);
@@ -73,36 +76,47 @@ function loadFonts(fontsArray, options) {
 	}
 
 	function storeAllFonts() {
-		var array = fonts;
+		var arr = fonts;
 
-		// Перебираем все добавленые шрифты по одному
-		array.forEach(function (font) {
-			storeFont(getFontParams(font))
-		})
+		// Check for fonts qty
+		// We can use Single font loader or Multiple fonts loading
+		if (typeof arr[0] === 'string' || arr[0] instanceof String) {
+
+			// Single loader
+			storeFont(getFontParams(arr))
+		} else {
+
+			// Multiple loader
+			// Loop all fonts through one by one
+			arr.forEach(function (font) {
+				storeFont(getFontParams(font))
+			})
+		}
 	}
 
 	function appendFont(styleCss) {
-		// 2. Создаём элемент <style>, который мы используем для вставки шрифта, закодированного в base64.
+		// 2. Create <style> element and use it for font encoded in base64
 		var styleElement = document.createElement('style');
 		styleElement.rel = 'stylesheet';
 		document.head.appendChild(styleElement);
-		// Из-за ошибок IE9 установка styleElement.textContent должна быть после этой строки.
 		styleElement.textContent = styleCss;
 	}
 
 	function storeFont(font) {
 		if (!isFontStored(font)) {
+			// If font not stored already — load it
 			loadFont(font)
 		}
 	}
 
 	function isFontStored(font) {
-		// 3. Проверяем, находится ли шрифт уже в localStorage и последней ли он версии.
+		// 3. Check if font already stored in LocalStorage
 		if (loSto[font.storedCss] && (loSto[font.storedUrl] === font.woffUrl || loSto[font.storedUrl] === font.woff2Url)) {
-			// css до сих пор в localStorage
-			// и были загружены из одного из текущих адресов
 
-			// 4. Применяем стили шрифта.
+			// yes, font already stored in LocalStorage
+			// so lets append it into page :)
+
+			// 4. Append font
 			appendFont(loSto[font.storedCss]);
 		} else {
 			return false;
@@ -110,25 +124,25 @@ function loadFonts(fontsArray, options) {
 	}
 
 	function loadFont(font) {
-		// Данных нет, или они загружены с устаревшего URL,
-		// поэтому мы должны загрузить их снова.
+		// Font not stored in LocalStorage
+		// so let's load it
 
-		// 5. Проверяем поддержку WOFF2 чтобы узнать, какой URL использовать.
+		// 5. But we check for WOFF2 support by browser
 		var url = (font.woff2Url && checkWoff2Support())
-			? font.woff2Url // WOFF2 URL передан в функцию и поддерживается.
-			: font.woffUrl; // Поддерживается только WOFF.
+			? font.woff2Url // yeap, WOFF2 support present
+			: font.woffUrl; // damn it, we use WOFF instead
 
-		// 6. Получаем данные с сервера.
+		// 6. Open request and download font
 		var request = new XMLHttpRequest();
 		request.open('GET', url, options.async);
 		request.onload = function () {
 			if (request.status >= 200 && request.status < 400) {
-				// 7. Обновляем localStorage новыми данными и применяем стили шрифта.
-				loSto[font.storedUrl] = url;
-				loSto[font.storedCss] = request.responseText;
 
-				if (options.appendFontWhenLoad) {
-					// Применить шрифт сразу после его загрузки
+				// 7. Update LocalStorage with new font data
+				loSto[font.storedUrl] = url;					// Store URL
+				loSto[font.storedCss] = request.responseText;	// Story css style with font
+
+				if (options.appendFontWhenLoaded) {
 					appendFont(request.responseText);
 				}
 			} else {
@@ -140,6 +154,7 @@ function loadFonts(fontsArray, options) {
 	}
 
 	function getFontParams(font) {
+		// Parse font array data
 		return {
 			name:        font[0]
 			, woffUrl:   font[1]
@@ -149,8 +164,8 @@ function loadFonts(fontsArray, options) {
 		}
 	}
 
+	// Source: https://github.com/filamentgroup/woff2-feature-test
 	function checkWoff2Support() {
-		// Источник: https://github.com/filamentgroup/woff2-feature-test
 		if (!( "FontFace" in window )) {
 			return false;
 		}
@@ -162,7 +177,7 @@ function loadFonts(fontsArray, options) {
 		return f.status == 'loading' || f.status == 'loaded';
 	}
 
-	// echo errors and notifications
+	// echo errors and notifications in debug mode
 	function echo(message) {
 		if (options.debug) {
 			console.log(message);
@@ -193,6 +208,6 @@ function loadFonts(fontsArray, options) {
 		return obj1;
 	}
 
-	// run Forrest run :)
+	// Run Forrest run :)
 	init();
 }
