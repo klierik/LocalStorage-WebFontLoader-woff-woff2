@@ -39,8 +39,9 @@ function loadFonts(fontsArray, options) {
 		 * Our feature detect should take these scenarios into account.
 		 * */
 		try {
-			var storage = window['localStorage'],
-				x       = '__storage_test__';
+			var storage = window.localStorage;
+                        if(!storage) return false;
+			var x       = '__storage_test__';
 			storage.setItem(x, x);
 			storage.removeItem(x);
 			return true;
@@ -57,7 +58,7 @@ function loadFonts(fontsArray, options) {
 			// Set helper variable for localStorage
 			// this can be helpful when cookies disable or browser denied access to it.
 			// Instead we can get some exceptions which stop fonts loading
-			loSto = localStorage || {};
+			loSto = window.localStorage || {};
 		} catch (error) {
 			echo(error);
 		}
@@ -168,7 +169,7 @@ function loadFonts(fontsArray, options) {
 		}
 
 		var f = new FontFace('t', 'url( "data:application/font-woff2;base64,d09GMgABAAAAAADcAAoAAAAAAggAAACWAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAABk4ALAoUNAE2AiQDCAsGAAQgBSAHIBtvAcieB3aD8wURQ+TZazbRE9HvF5vde4KCYGhiCgq/NKPF0i6UIsZynbP+Xi9Ng+XLbNlmNz/xIBBqq61FIQRJhC/+QA/08PJQJ3sK5TZFMlWzC/iK5GUN40psgqvxwBjBOg6JUSJ7ewyKE2AAaXZrfUB4v+hze37ugJ9d+DeYqiDwVgCawviwVFGnuttkLqIMGivmDg" ) format( "woff2" )', {});
-		f.load()['catch'](function () {
+		f.load().catch.(function () {
 		});
 
 		return f.status == 'loading' || f.status == 'loaded';
@@ -177,7 +178,7 @@ function loadFonts(fontsArray, options) {
 	// echo errors and notifications in debug mode
 	function echo(message) {
 		if (options.debug) {
-			console.log(message);
+			console.warn(message);
 		}
 	}
 
