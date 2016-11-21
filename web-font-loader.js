@@ -1,7 +1,13 @@
-function loadFonts(fontsArray, options) {
+/**
+ * Async WebFontLoader with woff/2 support
+ * https://github.com/klierik/LocalStorage-WebFontLoader-woff-woff2
+ * 
+ * v.1.0.0
+ * */
 
-	var fonts   = fontsArray,
-		options = mergeObject({
+(function () {
+	var loader = {
+		options: {
 			// If false: font will append into page only if it was previously stored into LocalStorage
 			// So font will append when customer refresh the page (prevent text blinking when with custom font usage)
 			// If true: append font immediately after font loading finish
@@ -12,200 +18,128 @@ function loadFonts(fontsArray, options) {
 			, postfixUrl:         '-url'			// Storage Css postfix
 			, postfixCss:         '-css'			// Storage Url postfix
 			, debug:              false				// Enable debug mode
-		}, options),
-		loSto   = {};
+		},
 
-	function init() {
-		if (!storageAvailable()) {
-			return false
-		}
+		storage: null,
 
-		prepare();
-		storeAllFonts();
-	}
+		init: function(fontsArr, options){
+			this.options = this.extend(this.options, options);
+			this.storage = this.getStorage();
 
+			fontsArr.forEach(function(font){
+				font = this.extend({
+					storedCss: this.options.prefix + font.name + this.options.postfixCss,
+					storedUrl: this.options.prefix + font.name + this.options.postfixUrl,
+					url: font.woff2Url && this.isWoff2Supported() ? font.woff2Url : font.woffUrl
+				}, font);
 
-	function storageAvailable() {
-		// 0.1 Check for Browser support and localStorage accessibility
-		/**
-		 * Browsers that support localStorage will have a property on the window object named localStorage.
-		 * However, for various reasons, just asserting that property exists may throw exceptions.
-		 * If it does exist, that is still no guarantee that localStorage is actually available,
-		 * as various browsers offer settings that disable localStorage. So a browser may support localStorage,
-		 * but not make it available to the scripts on the page.
-		 *
-		 * One example of that is Safari, which in Private Browsing mode gives us an empty localStorage object
-		 * with a quota of zero, effectively making it unusable (Error: QuotaExceededError: DOM Exception 22),
-		 * Our feature detect should take these scenarios into account.
-		 * */
-		try {
-			var storage = window.localStorage;
-                        if(!storage) return false;
-			var x       = '__storage_test__';
-			storage.setItem(x, x);
-			storage.removeItem(x);
-			return true;
-		}
-		catch (e) {
-			echo(e);
-			return false;
-		}
-	}
+				if(this.isFontLoaded(font)) {
+					this.appendFont(this.storage[font.storedCss]);
+					return;
+				};
 
-	function prepare() {
-		// 1. Prepare localStorage
-		try {
-			// Set helper variable for localStorage
-			// this can be helpful when cookies disable or browser denied access to it.
-			// Instead we can get some exceptions which stop fonts loading
-			loSto = window.localStorage || {};
-		} catch (error) {
-			echo(error);
-		}
-	}
+				this.storeFont(font);
+			}, this);
+		},
 
-	function storeAllFonts() {
-		var arr = fonts;
+		getStorage: function(){
+			if(!window.localStorage) {
+				throw new Error('localStorage not supported');
+			}
 
-		// Check for fonts qty
-		// We can use Single font loader or Multiple fonts loading
-		if (typeof arr[0] === 'string' || arr[0] instanceof String) {
+			window.localStorage.setItem('__storage_test__', '1');
+			window.localStorage.removeItem('__storage_test__');
 
-			// Single loader
-			storeFont(getFontParams(arr))
-		} else {
+			return window.localStorage;
+		},
 
-			// Multiple loader
-			// Loop all fonts through one by one
-			arr.forEach(function (font) {
-				storeFont(getFontParams(font))
-			})
-		}
-	}
+		isFontLoaded: function(font){
+			return this.storage[font.storedCss] && this.storage[font.storedUrl] === font.url;
+		},
 
-	function appendFont(styleCss) {
-		// 2. Create <style> element and use it for font encoded in base64
-		var styleElement = document.createElement('style');
-		styleElement.rel = 'stylesheet';
-		document.head.appendChild(styleElement);
-		styleElement.textContent = styleCss;
-	}
-
-	function storeFont(font) {
-		if (!isFontStored(font)) {
-
-			// If font not stored already — load it
-			if (options.loadWhenDomLoaded) {
+		storeFont: function(font){
+			if (this.options.loadWhenDomLoaded) {
 				document.addEventListener("DOMContentLoaded", function () {
-					loadFont(font)
-				});
+					this._loadFont(font)
+				}.apply(this));
 			} else {
-				loadFont(font)
+				this._loadFont(font)
 			}
-		}
-	}
+		},
 
-	function isFontStored(font) {
-		// 3. Check if font already stored in LocalStorage
-		if (loSto[font.storedCss] && (loSto[font.storedUrl] === font.woffUrl || loSto[font.storedUrl] === font.woff2Url)) {
+		_loadFont: function(font){
+			var request = new XMLHttpRequest();
+			request.open('GET', font.url, this.options.async);
+			request.onload = function () {
 
-			// yes, font already stored in LocalStorage
-			// so lets append it into page :)
+				if(request.readyState === XMLHttpRequest.DONE) {
+					if (request.status >= 200 && request.status < 400) {
+						this.storage[font.storedUrl] = font.url;
+						this.storage[font.storedCss] = request.responseText;
 
-			// 4. Append font
-			appendFont(loSto[font.storedCss]);
-			return true;
+						if (this.options.appendFontWhenLoaded) {
+							this.appendFont(request.responseText);
+						}
 
-		} else {
-			return false;
-		}
-	}
-
-	function loadFont(font) {
-		// Font not stored in LocalStorage
-		// so let's load it
-
-		// 5. But we check for WOFF2 support by browser
-		var url = (font.woff2Url && checkWoff2Support())
-			? font.woff2Url // yeap, WOFF2 support present
-			: font.woffUrl; // damn it, we use WOFF instead
-
-		// 6. Open request and download font
-		var request = new XMLHttpRequest();
-		request.open('GET', url, options.async);
-		request.onload = function () {
-			if (request.status >= 200 && request.status < 400) {
-
-				// 7. Update LocalStorage with new font data
-				loSto[font.storedUrl] = url;					// Store URL
-				loSto[font.storedCss] = request.responseText;	// Story css style with font
-
-				if (options.appendFontWhenLoaded) {
-					appendFont(request.responseText);
+					} else {
+						throw new Error(request.responseText);
+					}
 				}
-			} else {
-				echo(request.responseText)
-			}
-		};
+			}.bind(this);
 
-		request.send();
-	}
+			request.send();
+		},
 
-	function getFontParams(font) {
-		// Parse font array data
-		return {
-			name:        font[0]
-			, woffUrl:   font[1]
-			, woff2Url:  font[2]
-			, storedCss: options.prefix + font[0] + options.postfixCss
-			, storedUrl: options.prefix + font[0] + options.postfixUrl
-		}
-	}
+		appendFont: function(css){
+			var styleElement = document.createElement('style');
+			styleElement.rel = 'stylesheet';
+			document.head.appendChild(styleElement);
+			styleElement.textContent = css;
+		},
 
-	// Source: https://github.com/filamentgroup/woff2-feature-test
-	function checkWoff2Support() {
-		if (!( "FontFace" in window )) {
-			return false;
-		}
+		extend: function(target, source){
+			for (var property in source) {
+				try {
+					// Property in destination object set; update its value.
+					if (source[property].constructor == Object) {
+						target[property] = this.extend(target[property], source[property]);
 
-		var f = new FontFace('t', 'url( "data:application/font-woff2;base64,d09GMgABAAAAAADcAAoAAAAAAggAAACWAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAABk4ALAoUNAE2AiQDCAsGAAQgBSAHIBtvAcieB3aD8wURQ+TZazbRE9HvF5vde4KCYGhiCgq/NKPF0i6UIsZynbP+Xi9Ng+XLbNlmNz/xIBBqq61FIQRJhC/+QA/08PJQJ3sK5TZFMlWzC/iK5GUN40psgqvxwBjBOg6JUSJ7ewyKE2AAaXZrfUB4v+hze37ugJ9d+DeYqiDwVgCawviwVFGnuttkLqIMGivmDg" ) format( "woff2" )', {});
-		f.load()['catch'](function () {
-		});
+					} else {
+						target[property] = source[property];
 
-		return f.status == 'loading' || f.status == 'loaded';
-	}
+					}
 
-	// echo errors and notifications in debug mode
-	function echo(message) {
-		if (options.debug) {
-			console.warn(message);
-		}
-	}
-
-	// Recursively merge properties of two objects — http://stackoverflow.com/a/383245
-	function mergeObject(obj1, obj2) {
-
-		for (var p in obj2) {
-			try {
-				// Property in destination object set; update its value.
-				if (obj2[p].constructor == Object) {
-					obj1[p] = mergeObject(obj1[p], obj2[p]);
-
-				} else {
-					obj1[p] = obj2[p];
+				} catch (e) {
+					// Property in destination object not set; create it and set its value.
+					target[property] = source[property];
 
 				}
-
-			} catch (e) {
-				// Property in destination object not set; create it and set its value.
-				obj1[p] = obj2[p];
-
 			}
+
+			return target;
+		},
+
+		isWoff2Supported: function () {
+			if (!( "FontFace" in window )) {
+				return false;
+			}
+
+			var f = new FontFace('t', 'url( "data:application/font-woff2;base64,d09GMgABAAAAAADcAAoAAAAAAggAAACWAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAABk4ALAoUNAE2AiQDCAsGAAQgBSAHIBtvAcieB3aD8wURQ+TZazbRE9HvF5vde4KCYGhiCgq/NKPF0i6UIsZynbP+Xi9Ng+XLbNlmNz/xIBBqq61FIQRJhC/+QA/08PJQJ3sK5TZFMlWzC/iK5GUN40psgqvxwBjBOg6JUSJ7ewyKE2AAaXZrfUB4v+hze37ugJ9d+DeYqiDwVgCawviwVFGnuttkLqIMGivmDg" ) format( "woff2" )', {});
+			f.load().catch(function () {
+				//
+			});
+
+			return f.status == 'loading' || f.status == 'loaded';
 		}
+	};
 
-		return obj1;
-	}
 
-	// Run Forrest run :)
-	init();
-}
+	window.loadFonts = function(fontArray, options){
+		try {
+			loader.init(fontArray, options);
+		} catch(error) {
+			throw new Error(error);
+		}
+	};
+
+})();
