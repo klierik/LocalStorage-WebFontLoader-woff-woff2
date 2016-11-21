@@ -21,7 +21,13 @@ This script must be placed in the HEAD above all external stylesheet declaration
 ## Single font loader
 In this way we set only One font to load
 ```
-loadFonts(['Dispatch Bold', 'vendor/fonts/dispatch/bold.woff.css', 'vendor/fonts/dispatch/bold.woff2.css'])
+loadFonts([
+	{
+		name: 'Dispatch Bold',
+		woffUrl: '<?php echo $this->getUrl() . "vendor/fonts/dispatch/bold.woff.css" ?>',
+		woff2Url: '<?php echo $this->getUrl() . "vendor/fonts/dispatch/bold.woff2.css" ?>'
+	}
+]);
 ```
 ```bold.woff.css``` — css file with base64 font in woff format
 ```
@@ -47,23 +53,38 @@ loadFonts(['Dispatch Bold', 'vendor/fonts/dispatch/bold.woff.css', 'vendor/fonts
 In this way we set array of fonts to load
 ```
 loadFonts([
-	['Dispatch Bold', 'vendor/fonts/dispatch/bold.woff.css', 'vendor/fonts/dispatch/bold.woff2.css']
-	, ['Museo Sans Bold', 'vendor/fonts/museoSans/700woff.css', 'vendor/fonts/museoSans/700woff.css']
-])
+	{
+		name: 'Dispatch Bold',
+		woffUrl: '<?php echo $this->getUrl() . "vendor/fonts/dispatch/bold.woff.css" ?>',
+		woff2Url: '<?php echo $this->getUrl() . "vendor/fonts/dispatch/bold.woff2.css" ?>'
+	},
+	{
+		name: 'Open Sans',
+		woffUrl: '<?php echo $this->getUrl() . "vendor/fonts/openSans/openSans.woff.css" ?>',
+		woff2Url: '<?php echo $this->getUrl() . "vendor/fonts/openSans/openSans.woff2.css" ?>'
+	}
+]);
 ```
 
 ## How to set custom options
 If you need make some individual changes you can set custom options in this way
 ```
 loadFonts([
-		['Dispatch Bold', 'vendor/fonts/dispatch/bold.woff.css', 'vendor/fonts/dispatch/bold.woff2.css']
-		, ['Museo Sans Bold', 'vendor/fonts/museoSans/700woff.css', 'vendor/fonts/museoSans/700woff.css']
-	],
 	{
-		appendFontWhenLoaded: true		// Yes, append font when it was loaded
-		, loadWhenDomLoaded:  false		// Do not wait when DOMContentLoaded event fired, load font just now!
-		, async:              false		// When font so important and everything it nothing — do not use async mode
-	});
+		name: 'Dispatch Bold',
+		woffUrl: '<?php echo $this->getUrl() . "vendor/fonts/dispatch/bold.woff.css" ?>',
+		woff2Url: '<?php echo $this->getUrl() . "vendor/fonts/dispatch/bold.woff2.css" ?>'
+	},
+	{
+		name: 'Open Sans',
+		woffUrl: '<?php echo $this->getUrl() . "vendor/fonts/openSans/openSans.woff.css" ?>',
+		woff2Url: '<?php echo $this->getUrl() . "vendor/fonts/openSans/openSans.woff2.css" ?>'
+	}
+], {
+	appendFontWhenLoaded: true		// Yes, append font when it was loaded
+	, loadWhenDomLoaded:  false		// Do not wait when DOMContentLoaded event fired, load font just now!
+	, async:              false		// When font so important and everything it nothing — do not use async mode
+});
 ```
 
 # Thanks to
