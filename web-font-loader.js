@@ -138,7 +138,7 @@
 		try {
 			loader.init(fontArray, options);
 		} catch(error) {
-			throw new Error(error);
+			console.error(error);
 		}
 	};
 
