@@ -2,7 +2,7 @@
  * Async WebFontLoader with woff/2 support
  * https://github.com/klierik/LocalStorage-WebFontLoader-woff-woff2
  * 
- * v.1.0.0
+ * v.1.0.1
  * */
 
 (function () {
@@ -47,8 +47,10 @@
 				throw new Error('localStorage not supported');
 			}
 
-			window.localStorage.setItem('__storage_test__', '1');
-			window.localStorage.removeItem('__storage_test__');
+			var test = 't';
+
+			window.localStorage.setItem(test, test);
+			window.localStorage.removeItem(test);
 
 			return window.localStorage;
 		},
@@ -138,7 +140,8 @@
 		try {
 			loader.init(fontArray, options);
 		} catch(error) {
-			console.error(error);
+			console.log(error);
+			//console.log('Error: ' + error.name + ":" + error.message + "\n" + error.stack);
 		}
 	};
 
