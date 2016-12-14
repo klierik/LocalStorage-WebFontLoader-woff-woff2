@@ -87,6 +87,12 @@ loadFonts([
 });
 ```
 
+# Problems
+Under Safari Private mode script won't work (localStorage not supported). In DevTools says:
+```
+QuotaExceededError (DOM Exception 22): The quota has been exceeded.
+```
+
 # Thanks to
 RU: https://htmlacademy.ru/blog/61-better-webfont-loading-with-localstorage-and-woff2
 
