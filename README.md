@@ -83,7 +83,7 @@ loadFonts([
 ], {
 	appendFontWhenLoaded: true		// Yes, append font when it was loaded
 	, loadWhenDomLoaded:  false		// Do not wait when DOMContentLoaded event fired, load font just now!
-	, async:              false		// When font so important and everything it nothing — do not use async mode
+	, async:              false		// When font so important and everything is nothing — do not use async mode
 });
 ```
 
